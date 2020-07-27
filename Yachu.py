@@ -7,7 +7,7 @@ class Yachu():
     locked = [False] * 5
     phase = 0
     isAlive = [True] * 12
-    turn = 1
+    turn = 0
 
     def __init__(self):
         print("새 야추게임 생성")
@@ -16,8 +16,8 @@ class Yachu():
     def lock(self, num):
         self.locked[num - 1] = True
 
-    def unlock(self, num):
-        self.locked[num - 1] = False
+    def unlockAll(self):
+        self.locked = [False] * 5
 
     def __setDice__(self, s):
         self.dice = s
@@ -34,7 +34,7 @@ class Yachu():
 
     def getScoreBoard(self):
         return "<현재 턴:{}/12>\n".format(self.turn) + "----점수표----\n1.Aces:{}\n2.Deuces:{}\n3.Threes:{}\n4.Fours:{}\n5.Fives:{}\n6.Sixes:{}\n-------------\nSubtotal:{}\nBonus:{}" \
-               "\n(Bonus if Subtotal > 62)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
+               "\n(63점 이상이면 보너스)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
             *self.score)
 
     def subtotal(self):
@@ -79,8 +79,6 @@ class Yachu():
         return False
 
     def setScore(self, ind):
-        if not self.isAlive[ind - 1]: return  # 쓴데다 또 쓸때
-
         if 0 < ind < 7:
             temp = 0
             for i in self.dice:
@@ -132,6 +130,10 @@ class Yachu():
         self.isAlive[ind - 1] = False
         self.turn +=1
 
+    def isAvailable(self,ind):
+        try: return self.isAlive[ind-1]
+        except: return False
+
 #demo for console
 '''
 def main():
@@ -147,7 +149,7 @@ def main():
                 ind = int(input('저장할 칸 선택, 0은 다시굴림 : '))
 
             if ind == 0:
-                for i in range(5): yachu.unlock(i)
+                for i in range(5): yachu.unlockAll()
                 temp = input('고정할 주사위 선택 - ex) 1 2 4 : ').split()
                 for i in temp: yachu.lock(int(i))
 
