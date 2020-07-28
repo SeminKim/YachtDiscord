@@ -1,5 +1,5 @@
 import random
-
+import discord
 
 class Yachu():
     score = [0] * 15
@@ -8,6 +8,7 @@ class Yachu():
     phase = 0
     isAlive = [True] * 12
     turn = 0
+
 
     def __init__(self):
         print("새 야추게임 생성")
@@ -36,6 +37,31 @@ class Yachu():
         return "<현재 턴:{}/12>\n".format(self.turn) + "----점수표----\n1.Aces:{}\n2.Deuces:{}\n3.Threes:{}\n4.Fours:{}\n5.Fives:{}\n6.Sixes:{}\n-------------\nSubtotal:{}\nBonus:{}" \
                "\n(63점 이상이면 보너스)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
             *self.score)
+
+    def getScoreBoardDiscord(self):
+        def valueFiller(ind):
+            if self.isAlive[ind-1]: return '0*'
+            else:
+                if ind<7: return str(self.score[ind-1])
+                else: return str(self.score[ind+1])
+
+        embed = discord.Embed(title="점수판", color=0xff0000)
+        embed.add_field(name="1. Aces", value=valueFiller(1), inline=True)
+        embed.add_field(name="2. Deuces", value=valueFiller(2), inline=True)
+        embed.add_field(name="3. Threes", value=valueFiller(3), inline=True)
+        embed.add_field(name="4. Fours", value=valueFiller(4), inline=True)
+        embed.add_field(name="5. Fives", value=valueFiller(5), inline=True)
+        embed.add_field(name="6. Sixes", value=valueFiller(6), inline=True)
+        embed.add_field(name=f'---------------------------------------\nSubtotal: {self.score[6]}              Bonus: {self.score[7]}', value="63점 이상이면 보너스 35점", inline=False)
+        embed.add_field(name="---------------------------------------", value="<특수족보>", inline=False)
+        embed.add_field(name="7. Choices", value=valueFiller(7), inline=True)
+        embed.add_field(name="8. Four Cards", value=valueFiller(8), inline=True)
+        embed.add_field(name="9. Full House", value=valueFiller(9), inline=True)
+        embed.add_field(name="10. S. Straight", value=valueFiller(10), inline=True)
+        embed.add_field(name="11. L. Straight", value=valueFiller(11), inline=True)
+        embed.add_field(name="12. Yacht", value=valueFiller(12), inline=True)
+        embed.add_field(name="---------------------------------------\nTotal", value=str(self.score[14]), inline=True)
+        return embed
 
     def subtotal(self):
         return sum(self.score[:6])
