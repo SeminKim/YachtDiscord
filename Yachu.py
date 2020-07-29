@@ -157,7 +157,9 @@ class Yachu():
         self.turn +=1
 
     def isAvailable(self,ind):
-        try: return self.isAlive[ind-1]
+        try:
+            if not 0<=ind-1<=11: return False
+            return self.isAlive[ind-1]
         except: return False
 
 #demo for console
