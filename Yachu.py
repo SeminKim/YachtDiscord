@@ -1,6 +1,7 @@
 import random
 import discord
 
+
 class Yachu():
     score = [0] * 15
     dice = [0] * 5
@@ -8,7 +9,6 @@ class Yachu():
     phase = 0
     isAlive = [True] * 12
     turn = 0
-
 
     def __init__(self):
         print("새 야추게임 생성")
@@ -34,16 +34,20 @@ class Yachu():
             return str(self.dice) + '\n{}번 다시 굴릴 수 있습니다'.format(3 - self.phase)
 
     def getScoreBoard(self):
-        return "<현재 턴:{}/12>\n".format(self.turn) + "----점수표----\n1.Aces:{}\n2.Deuces:{}\n3.Threes:{}\n4.Fours:{}\n5.Fives:{}\n6.Sixes:{}\n-------------\nSubtotal:{}\nBonus:{}" \
-               "\n(63점 이상이면 보너스)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
+        return "<현재 턴:{}/12>\n".format(
+            self.turn) + "----점수표----\n1.Aces:{}\n2.Deuces:{}\n3.Threes:{}\n4.Fours:{}\n5.Fives:{}\n6.Sixes:{}\n-------------\nSubtotal:{}\nBonus:{}" \
+                         "\n(63점 이상이면 보너스)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
             *self.score)
 
     def getScoreBoardDiscord(self):
         def valueFiller(ind):
-            if self.isAlive[ind-1]: return '0*'
+            if self.isAlive[ind - 1]:
+                return '0*'
             else:
-                if ind<7: return str(self.score[ind-1])
-                else: return str(self.score[ind+1])
+                if ind < 7:
+                    return str(self.score[ind - 1])
+                else:
+                    return str(self.score[ind + 1])
 
         embed = discord.Embed(title="점수판", color=0xff0000)
         embed.add_field(name="1. Aces", value=valueFiller(1), inline=True)
@@ -52,7 +56,9 @@ class Yachu():
         embed.add_field(name="4. Fours", value=valueFiller(4), inline=True)
         embed.add_field(name="5. Fives", value=valueFiller(5), inline=True)
         embed.add_field(name="6. Sixes", value=valueFiller(6), inline=True)
-        embed.add_field(name=f'---------------------------------------\nSubtotal: {self.score[6]}              Bonus: {self.score[7]}', value="63점 이상이면 보너스 35점", inline=False)
+        embed.add_field(
+            name=f'---------------------------------------\nSubtotal: {self.score[6]}              Bonus: {self.score[7]}',
+            value="63점 이상이면 보너스 35점", inline=False)
         embed.add_field(name="---------------------------------------", value="<특수족보>", inline=False)
         embed.add_field(name="7. Choices", value=valueFiller(7), inline=True)
         embed.add_field(name="8. Four Cards", value=valueFiller(8), inline=True)
@@ -154,15 +160,17 @@ class Yachu():
         self.phase = 0
         self.locked = [False] * 5
         self.isAlive[ind - 1] = False
-        self.turn +=1
+        self.turn += 1
 
-    def isAvailable(self,ind):
+    def isAvailable(self, ind):
         try:
-            if not 0<=ind-1<=11: return False
-            return self.isAlive[ind-1]
-        except: return False
+            if not 0 <= ind - 1 <= 11: return False
+            return self.isAlive[ind - 1]
+        except:
+            return False
 
-#demo for console
+
+# demo for console
 '''
 def main():
     yachu = Yachu()

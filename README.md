@@ -1,2 +1,2 @@
 # YachtDiscord
-will be added later
+최근 인기를 얻고있는 Yacht Dice 게임을 디스코드 봇으로 구현하는 프로젝트입니다. 출석체크를 통해 점수를 쌓는 날갱봇과 연동하여 점수를 걸고 게임할 수 있습니다.
