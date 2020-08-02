@@ -3,14 +3,14 @@ import discord
 
 
 class Yachu():
-    score = [0] * 15
-    dice = [0] * 5
-    locked = [False] * 5
-    phase = 0
-    isAlive = [True] * 12
-    turn = 0
 
     def __init__(self):
+        self.score = [0] * 15
+        self.dice = [0] * 5
+        self.locked = [False] * 5
+        self.phase = 0
+        self.isAlive = [True] * 12
+        self.turn = 0
         print("새 야추게임 생성")
         return
 
@@ -24,14 +24,13 @@ class Yachu():
         self.dice = s
 
     def rollDice(self):
-        if self.phase == 3:
-            return '기회 끝'
-        else:
-            self.phase += 1
-            for i in range(5):
-                if not self.locked[i]:
-                    self.dice[i] = random.randint(1, 6)
-            return str(self.dice) + '\n{}번 다시 굴릴 수 있습니다'.format(3 - self.phase)
+        assert self.phase < 3
+
+        self.phase += 1
+        for i in range(5):
+            if not self.locked[i]:
+                self.dice[i] = random.randint(1, 6)
+        return str(self.dice) + '\n{}번 다시 굴릴 수 있습니다'.format(3 - self.phase)
 
     def getScoreBoard(self):
         return "<현재 턴:{}/12>\n".format(
@@ -49,7 +48,7 @@ class Yachu():
                 else:
                     return str(self.score[ind + 1])
 
-        embed = discord.Embed(title="점수판", color=0xff0000)
+        embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
         embed.add_field(name="1. Aces", value=valueFiller(1), inline=True)
         embed.add_field(name="2. Deuces", value=valueFiller(2), inline=True)
         embed.add_field(name="3. Threes", value=valueFiller(3), inline=True)
@@ -58,8 +57,8 @@ class Yachu():
         embed.add_field(name="6. Sixes", value=valueFiller(6), inline=True)
         embed.add_field(
             name=f'---------------------------------------\nSubtotal: {self.score[6]}              Bonus: {self.score[7]}',
-            value="63점 이상이면 보너스 35점", inline=False)
-        embed.add_field(name="---------------------------------------", value="<특수족보>", inline=False)
+            value="(63점 이상이면 보너스 35점)", inline=False)
+        embed.add_field(name="---------------------------------------", value="특수족보", inline=False)
         embed.add_field(name="7. Choices", value=valueFiller(7), inline=True)
         embed.add_field(name="8. Four Cards", value=valueFiller(8), inline=True)
         embed.add_field(name="9. Full House", value=valueFiller(9), inline=True)

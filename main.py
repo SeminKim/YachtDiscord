@@ -1,8 +1,8 @@
 from Yachu import *
 import discord
-import asyncio
 from discord.ext import commands
 from ext_nalgang import *
+import time
 
 
 class ReAsk(Exception):
@@ -10,14 +10,14 @@ class ReAsk(Exception):
 
 
 token = open('data/token.txt', 'r').readline()
-game = discord.Game("야추")
+game = discord.Game("도움말은 !야추도움")
 bot = commands.Bot(command_prefix='!', activity=game)
 playerID = None
 
 
 @bot.event
 async def on_ready():
-    await bot.guilds[0].channels[2].send("bot started")
+    print("bot started")
 
 
 @bot.command(name='야추시작')
@@ -26,7 +26,7 @@ async def start(ctx):
     if playerID == None:
         await ctx.send(f'{ctx.author.mention}님과 야추를 시작합니다')
         playerID = ctx.author.id
-        await playing(ctx)
+        await playing(ctx, 0)
     elif playerID == ctx.author.id:
         pass
     else:
@@ -76,23 +76,34 @@ async def help(ctx):
     await ctx.send('!야추시작 - 야추봇과 야추 주사위 연습게임을 시작합니다.\n'
                    '!야추그만 - 게임을 중도 포기합니다. 야추봇과의 대화가 즉시 종료됩니다.\n'
                    '!야추도움 - 이 도움말을 봅니다.\n'
-                   '!야추베팅 - 날갱점수를 걸고 총점 200점에 도전합니다.(추가예정)\n'
+                   '!야추베팅 - 날갱점수를 걸고 총점 200점에 도전합니다.\n'
                    '!야추대결 - 날갱점수를 걸고 상대와 대결합니다.(추가예정)'
                    )
 
 
 @bot.command(name='야추베팅')
 async def bet(ctx):
-    befo = ng_getpoint(ctx.author.id)
-    await ctx.send(f'{ctx.author.mention}님과 날갱점수를 걸고 야추를 시작합니다. 얼마나 거시겠어요?')
-    msg = await bot.wait_for('message', check=author_check)
+    global playerID
+    if playerID == None:
+        await ctx.send(f'{ctx.author.mention}님이 날갱점수를 걸고 야추 200점에 도전합니다.')
+        playerID = ctx.author.id
+    elif playerID == ctx.author.id:
+        pass
+    else:
+        await ctx.send("다른 분과 이미 야추중이에요. 기다려주세요")
 
-    try:
-        if msg.content.startswith('!야추그만'): return
+    def func3(msg):
+        now = ng_getpoint(ctx.author)
         betpoint = int(msg.content)
-        if betpoint > befo: raise ReAsk
-    except:
-        await reask(ctx)
+        print(betpoint)
+        if betpoint > now or betpoint <= 0: raise ReAsk
+        return betpoint
+
+    betpoint = await question(ctx, f'현재 점수는 {ng_getpoint(ctx.author)}점입니다. 얼마나 거시겠어요?', func3)
+    if betpoint == -1:
+        await end(ctx)
+        return
+    await playing(ctx, betpoint)
 
 
 @bot.command(name='야추대결')
@@ -100,7 +111,8 @@ async def vs(ctx):
     pass
 
 
-async def playing(ctx):
+async def playing(ctx, betpoint):
+    ng_addpoint(ctx.author, -1 * betpoint)
     yachu = Yachu()
     i = 12
     while i > 0:
@@ -148,7 +160,14 @@ async def playing(ctx):
                 break
         i -= 1
     await ctx.channel.send(embed=yachu.getScoreBoardDiscord())
-    await ctx.channel.send('축하합니다!{}점을 얻으셨습니다!'.format(yachu.score[14]))
+    await ctx.channel.send('{}점을 얻으셨습니다!'.format(yachu.score[14]))
+    if betpoint > 0:
+        if yachu.score[14] < 199:
+            await ctx.channel.send('안타깝게도 200점을 획득하지는 못하셨네요. 다음 기회에!')
+        else:
+            ng_addpoint(ctx.author, 2 * betpoint)
+            await ctx.channel.send(f'200점을 획득하셨네요. {betpoint}점을 획득하여 현재 날갱 점수는{ng_getpoint(ctx.author)}입니다!')
+    await end(ctx)
     return
 
 
