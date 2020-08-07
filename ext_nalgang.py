@@ -8,6 +8,7 @@ c = conn.cursor()
 
 
 def ng_getpoint(user):
+    return 100
     #return 100 :DB가 사용 불가능할때 떔빵
     c.execute('''SELECT point FROM Members WHERE id=:Id''', {"Id": user.id})
     P = c.fetchone()
@@ -18,6 +19,7 @@ def ng_getpoint(user):
 
 
 def ng_addpoint(user, delta):
+    return
     #return :DB가 사용 불가능할때 떔빵
     point = ng_getpoint(user) + delta
     c.execute('''UPDATE Members SET point=:point WHERE id=:Id''', {"Id": user.id, "point": point})
