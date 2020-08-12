@@ -3,6 +3,7 @@ from MultiYachu import MultiYachu
 import discord
 from discord.ext import commands
 from ext_nalgang import *
+from asyncio import TimeoutError
 import time
 
 
@@ -74,19 +75,24 @@ async def question(ctx, dia, func, user=None, point=0):
             await end(ctx)
             return -1
 
-        if ctx.author == user:
-            msg = await bot.wait_for('message', check=author_check_1)
-        else:
-            msg = await bot.wait_for('message', check=author_check_2)
         try:
+            if ctx.author == user:
+                msg = await bot.wait_for('message', check=author_check_1, timeout=10)
+            else:
+                msg = await bot.wait_for('message', check=author_check_2, timeout=10)
             if msg.content.startswith('!야추그만'):
                 ng_addpoint(user, -1 * point)
                 return -1
             return func(msg)
-        except:
+        except ReAsk:
             await ctx.send('잘못된 입력입니다. 다시 말씀해주세요')
             counter -= 1
             continue
+        except TimeoutError:
+            await ctx.send('180초간 응답이 없어 종료됩니다.')
+            ng_addpoint(user, -1 * point)
+            await end(ctx)
+            return -1
 
 
 @bot.command(name='야추도움')
