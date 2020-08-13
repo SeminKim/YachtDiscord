@@ -15,7 +15,7 @@ token = open('data/token.txt', 'r').readline()
 channels = list(map(int, open('data/channel.txt', 'r').readlines()))
 game = discord.Game("도움말은 !야추도움")
 bot = commands.Bot(command_prefix='!', activity=game)
-playerID = []  # In single play, playerID[0] is player. In Multiplay, playerID[0] is host and ~[1] is participant.
+playerID = []  # In single-play, playerID[0] is player. In multi-play, playerID[0] is host and ~[1] is participant.
 
 
 @bot.check  # only available in whitelisted channel
@@ -77,9 +77,9 @@ async def question(ctx, dia, func, user=None, point=0):
 
         try:
             if ctx.author == user:
-                msg = await bot.wait_for('message', check=author_check_1, timeout=10)
+                msg = await bot.wait_for('message', check=author_check_1, timeout=180)
             else:
-                msg = await bot.wait_for('message', check=author_check_2, timeout=10)
+                msg = await bot.wait_for('message', check=author_check_2, timeout=180)
             if msg.content.startswith('!야추그만'):
                 ng_addpoint(user, -1 * point)
                 return -1
