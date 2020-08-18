@@ -1,49 +1,19 @@
-import os
-import sqlite3
 import time
-
-db_path = os.path.dirname(os.path.abspath(os.path.dirname(__file__))) + "\\nalgang-master\\data\\member.db"
-if not os.path.isfile(db_path):
-    raise FileNotFoundError
-conn = sqlite3.connect(db_path)
-c = conn.cursor()
-
+import requests
+import discord
+from config import NG_SERVER_URL
 
 def ng_getpoint(user):
-    c.execute('''SELECT point FROM Members WHERE id=:Id''', {"Id": user.id})
-    P = c.fetchone()
-    if P == None:
-        return None
-    else:
-        return P[0]
+    foo = requests.get(NG_SERVER_URL+str(user.id)).text
+    return int(foo)
 
-
-def ng_addpoint(user, delta):
+async def ng_addpoint(ctx, user:discord.Member, delta:int):
     with open('data/log.txt', 'a') as f:
-        f.write(f'{delta} point added to {user}, now {ng_getpoint(user)}, executed at {time.ctime()}\n')
-    point = ng_getpoint(user) + delta
-    c.execute('''UPDATE Members SET point=:point WHERE id=:Id''', {"Id": user.id, "point": point})
-    conn.commit()
-
+        f.write(f'{delta} point added to {user.display_name}, now {ng_getpoint(user)}, executed at {time.ctime()}\n')
+    await ctx.send(f"!점수추가 {user.id} {delta}")
     return
 
 
-def ng_movepoint(sender, receiver, point):
-    ng_addpoint(receiver, point)
-    ng_addpoint(sender, -1 * point)
-
-
-# test code
-"""
-def ng_getpoint(user):
-    return 100
-
-
-def ng_addpoint(user, delta):
-    return
-
-
-def ng_movepoint(sender, receiver, point):
-    ng_addpoint(receiver, point)
-    ng_addpoint(sender, -1 * point)
-"""
+def ng_movepoint(ctx, sender, receiver, point):
+    ng_addpoint(ctx, receiver, point)
+    ng_addpoint(ctx, sender, -1 * point)

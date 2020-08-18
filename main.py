@@ -1,9 +1,8 @@
 from Yachu import *
 from MultiYachu import MultiYachu
-import discord
 from discord.ext import commands
 from asyncio import TimeoutError
-import time
+from ext_nalgang import *
 from config import *
 
 
@@ -65,26 +64,6 @@ def author_check_2(m):  # check if author of msg is participant
     return False
 
 
-async def ng_getpoint(ctx, user):
-    await ctx.send(f"!점수조회 {user.id}")
-
-    def check(m):
-        return m.author.id == NALGANG_BOT_ID
-
-    msg = await bot.wait_for('message', check=check)
-    return int(msg)
-
-
-async def ng_addpoint(ctx, user, delta):
-    await ctx.send(f"!점수추가 {user.id} {delta}")
-    return
-
-
-async def ng_movepoint(ctx, sender, receiver, point):
-    await ng_addpoint(ctx, receiver, point)
-    await ng_addpoint(ctx, sender, -1 * point)
-
-
 async def question(ctx, dia, func, user=None, point=0):
     if user is None: user = ctx.author
     await ctx.send(dia)
@@ -104,7 +83,7 @@ async def question(ctx, dia, func, user=None, point=0):
                 await ng_addpoint(ctx, user, -1 * point)
                 return -1
             return func(msg)
-        except ReAsk:
+        except (ReAsk, ValueError):
             await ctx.send('잘못된 입력입니다. 다시 말씀해주세요')
             counter -= 1
             continue
@@ -152,14 +131,13 @@ async def bet(ctx):
         return
 
     def func3(msg):
-        now = await ng_getpoint(ctx, ctx.author)
+        now = ng_getpoint(ctx.author)
         betpoint = int(msg.content)
         if betpoint > now or betpoint <= 0: raise ReAsk
         return betpoint
 
-    betpoint = await question(ctx, f'현재 점수는 {await ng_getpoint(ctx, ctx.author)}점입니다. 얼마나 거시겠어요?', func3)
+    betpoint = await question(ctx, f'현재 점수는 {ng_getpoint(ctx.author)}점입니다. 얼마나 거시겠어요?', func3)
     if betpoint == -1:
-        await end(ctx)
         return
     await playing(ctx, betpoint)
 
@@ -168,7 +146,7 @@ async def bet(ctx):
 async def vs(ctx, user: discord.member.Member, point: int):
     global playerID
     if len(playerID) == 0:
-        a, b = await ng_getpoint(ctx, ctx.author), await ng_getpoint(ctx, user)
+        a, b = ng_getpoint(ctx.author), ng_getpoint(user)
         if a < point or b < point or point < 0:
             await ctx.send(f'거 상도덕은 지키면서 삽시다. 어떻게 {point}점을 걸겠다고 그러십니까?\n(현재 각각 {a}점, {b}점 보유)')
         else:
@@ -254,7 +232,7 @@ async def playing(ctx, betpoint):
             await ctx.send('안타깝게도 200점을 획득하지는 못하셨네요. 다음 기회에!')
         else:
             await ng_addpoint(ctx, ctx.author, betpoint)
-            await ctx.send(f'200점 이상을 획득하셨네요. {betpoint}점을 획득하여 현재 날갱 점수는{await ng_getpoint(ctx, ctx.author)}입니다!')
+            await ctx.send(f'200점 이상을 획득하셨네요. {betpoint}점을 획득하여 현재 날갱 점수는{ng_getpoint(ctx.author)}입니다!')
     await end(ctx)
     return
 
@@ -331,7 +309,7 @@ async def vs_playing(ctx, user, betpoint):
         ng_movepoint(ctx, sender=ctx.author, receiver=user, point=betpoint)
     else:
         await ctx.send('어케비겼누ㄷ.ㄷ')
-    await ctx.send(f'게임 결과에 따라, 각각 {await ng_getpoint(ctx, ctx.author)}점, {await ng_getpoint(ctx, user)}점이 되셨습니다!')
+    await ctx.send(f'게임 결과에 따라, 각각 {ng_getpoint(ctx.author)}점, {ng_getpoint(user)}점이 되셨습니다!')
     await end(ctx)
 
     return
