@@ -15,7 +15,7 @@ channels = CHANNEL_WHITELIST
 game = discord.Game("도움말은 !야추도움")
 bot = commands.Bot(command_prefix='!', activity=game)
 playerID = []  # In single-play, playerID[0] is player. In multi-play, playerID[0] is host and ~[1] is participant.
-
+bot.get_all_channels()
 
 @bot.check  # only available in whitelisted channel
 async def channel_whitelist(ctx):
@@ -26,7 +26,10 @@ async def channel_whitelist(ctx):
 
 @bot.event
 async def on_ready():
-    print("bot started")
+    with open('data/log.txt', 'a') as f:
+        f.write(f'bot started at {time.ctime()}\n')
+    for channelid in channels:
+        await bot.get_channel(channelid).send('야추봇이 시작되었습니다!')
 
 
 @bot.command(name='야추시작')
