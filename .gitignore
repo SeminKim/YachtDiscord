@@ -1,6 +1,7 @@
 # Local data and .idea
 data/
 .idea/
+config.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -8,6 +8,7 @@ def ng_getpoint(user):
     return int(foo)
 
 async def ng_addpoint(ctx, user:discord.Member, delta:int):
+    if delta == 0: return
     with open('data/log.txt', 'a') as f:
         f.write(f'{delta} point added to {user.display_name}, now {ng_getpoint(user)}, executed at {time.ctime()}\n')
     await ctx.send(f"!점수추가 {user.mention} {delta}")
