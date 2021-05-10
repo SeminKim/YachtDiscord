@@ -5,19 +5,20 @@ from asyncio import TimeoutError
 from ext_nalgang import *
 from config import *
 
-
 whitelist = CHANNEL_WHITELIST
 game = discord.Game("도움말은 !야추도움")
 bot = commands.Bot(command_prefix='!', activity=game)
 bot.player_one = None
 bot.player_two = None
 bot.channel_now = None
+TIME_OUT = 60.0
 
 def makefree(bot):
     bot.player_one = None
     bot.player_two = None
     bot.channel_now = None
     return
+
 
 @bot.check  # only available in whitelisted channel
 async def channel_whitelist(ctx):
@@ -32,12 +33,12 @@ async def on_ready():
     with open('data/log.txt', 'a') as f:
         f.write(f'bot started at {time.ctime()}\n')
     for channelid in whitelist:
-        #await bot.get_channel(channelid).send('야추봇이 시작되었습니다!')
+        # await bot.get_channel(channelid).send('야추봇이 시작되었습니다!')
         print("READY")
 
 
 @bot.command(name='야추연습')
-async def start(ctx:discord.ext.commands.Context):
+async def start(ctx: discord.ext.commands.Context):
     if bot.player_one != None:
         await ctx.send("다른 분과 이미 야추중이에요. 기다려주세요")
         return
@@ -72,7 +73,7 @@ async def rule(ctx):
 
 
 @bot.command(name='야추베팅')
-async def bet(ctx, point:int):
+async def bet(ctx, point: int):
     if bot.player_one != None:
         await ctx.send("다른 분과 이미 야추중이에요. 기다려주세요")
         return
@@ -80,8 +81,8 @@ async def bet(ctx, point:int):
         await ctx.send('되겠냐고ㅋㅋㅋ')
         return
     limit = ng_getpoint(ctx.author)
-    if point > limit: #생각해보니 게임 전 베팅액을 미리 차감해야할 것 같음. 게임하면서 동시에 다른 채널에서 뒤로 빼돌리는 문제가 있음
-        drip_msg:discord.Message = await ctx.send(f'{limit}점 가지고 있어서 {point}점 베팅할 수 없어요. ㅋㅋㅋㅋ거지쉑')
+    if point > limit:  # 생각해보니 게임 전 베팅액을 미리 차감해야할 것 같음. 게임하면서 동시에 다른 채널에서 뒤로 빼돌리는 문제가 있음
+        drip_msg: discord.Message = await ctx.send(f'{limit}점 가지고 있어서 {point}점 베팅할 수 없어요. ㅋㅋㅋㅋ거지쉑')
         time.sleep(1)
         await drip_msg.edit(content=f'{limit}점 가지고 있어서 {point}점 베팅할 수 없어요ㅠ.ㅠ')
         return
@@ -89,7 +90,7 @@ async def bet(ctx, point:int):
     await ctx.send(f'{ctx.author.mention}님이 {point}점을 걸고 야추 200점에 도전합니다.')
     bot.player_one = ctx.author
     bot.channel_now = ctx.channel
-    await single_play(ctx.author,bot.channel_now, betpoint=point)
+    await single_play(ctx.author, bot.channel_now, betpoint=point)
 
 
 """@yachubot.command(name='야추대결')
@@ -127,64 +128,75 @@ async def vs(ctx, user: discord.member.Member, point: int):
         return"""
 
 
-async def single_play(player:discord.Member, chan:discord.TextChannel, betpoint=0):
+async def single_play(player: discord.Member, chan: discord.TextChannel, betpoint=0):
     yachu = Yachu()
     i = 12
-    dice_index_list = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🆗'] #OK 뒤로 빼고 밑에 인덱스 고쳐야함
-    save_index_list = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','🇦','🇧','🇨','🇩','🇪','🇫','🆗']
+    dice_index_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '🆗']  # OK 뒤로 빼고 밑에 인덱스 고쳐야함
+    save_index_list = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '🇦', '🇧', '🇨', '🇩', '🇪', '🇫', '🆗']
     def check(reaction, user):
         return user == player and str(reaction.emoji) == '🆗'
 
+    board_msg = await chan.send(embed=yachu.getScoreBoard())
+    roll_msg = await chan.send('로딩 중...')
+    phase_msg = await chan.send('로딩 중...')
+
     while i > 0:
-        board_msg = await chan.send(embed=yachu.getScoreBoard())
+        # 현재 스코어보드 전송
+        await board_msg.edit(embed=yachu.getScoreBoard())
+
         while yachu.phase < 3:
-            roll_msg = await chan.send(yachu.rollDice())
-            phase_msg = await chan.send('\n{}번 다시 굴릴 수 있습니다'.format(3 - yachu.phase))
-            if yachu.phase == 3: break #굴릴 기회가 없으면 저장하러 보냄
+            # 먼저 주사위를 굴리고(phase 1증가), 무엇을 다시 굴릴 지 질문 메시지 전송. 메시지 화면은 board, dice, phase, ask 순.
+            await roll_msg.edit(content=yachu.rollDice())
+            await phase_msg.edit(content='\n{}번 다시 굴릴 수 있습니다'.format(3 - yachu.phase))
+            if yachu.phase == 3: break  # 굴릴 기회가 없으면 저장하러 보냄
             ask_msg = await chan.send('다시 굴릴 주사위 번호를 고르고 :ok:버튼을 눌러주세요.')
-            for button in dice_index_list:  #이렇게 해도 되는지 의문?? 일단 넘어감
+
+            for button in dice_index_list:  # Button은 이모지
                 await ask_msg.add_reaction(button)
 
+            # Reaction 기다린 다음 OK 이모지인지, 유저는 동일인인지 체크. 타임아웃시 종료
             try:
-                reaction_type, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+                reaction_type, user = await bot.wait_for('reaction_add', timeout=TIME_OUT, check=check)
             except TimeoutError:
                 await chan.send('Timeout!')
-                await ng_addpoint(chan,player,-1 * betpoint)
+                await ng_addpoint(chan, player, -1 * betpoint)
                 makefree(bot)
                 return
 
-            ask_msg = discord.utils.get(bot.cached_messages, id=ask_msg.id)
+            # 캐시된 메시지를 새걸로 업데이트하고, Reaction 중 dice index 찾아서 unlock
+            ask_msg: discord.Message = discord.utils.get(bot.cached_messages, id=ask_msg.id)
             yachu.lockAll()
-            for reaction in ask_msg.reactions: #type:discord.Reaction
+            for reaction in ask_msg.reactions:  # reaction:discord.Reaction
                 if (reaction.emoji not in dice_index_list) or (reaction.emoji == '🆗'): continue
                 async for user in reaction.users():
                     if user != player: continue
-                    yachu.unlock(dice_index_list.index(reaction.emoji)+1)
+                    yachu.unlock(dice_index_list.index(reaction.emoji) + 1)
                     break
 
             await ask_msg.delete()
-            await phase_msg.delete()
+            # 만약 다 잠겨있으면, 루프를 종료하고 점수 저장하도록 넘어감
             if yachu.isAllLocked():
                 break
-            await roll_msg.delete()
 
-        #점수 저장하는 부분
-        ask_msg = await chan.send('저장할 항목을 고르고 :ok:버튼을 눌러주세요')
+        # 점수 저장하는 부분
+        ask_msg = await chan.send(content='저장할 항목을 고르고 :ok:버튼을 눌러주세요')
         for button in save_index_list:
             await ask_msg.add_reaction(button)
         try:
-            reaction_type, user = await bot.wait_for('reaction_add', timeout=60.0, check=check)
+            reaction_type, user = await bot.wait_for('reaction_add', timeout=TIME_OUT, check=check)
         except TimeoutError:
             await chan.send('Timeout!')
             await ng_addpoint(chan, player, -1 * betpoint)
             makefree(bot)
             return
+
+        # 어느 칸에 저장할지 결정, 처리
         ind = -1
         breaker = False
         ask_msg = discord.utils.get(bot.cached_messages, id=ask_msg.id)
 
         for reaction in ask_msg.reactions:  # type:discord.Reaction
-            if (reaction.emoji not in save_index_list) or (reaction.emoji == '🆗') : continue
+            if (reaction.emoji not in save_index_list) or (reaction.emoji == '🆗'): continue
             if breaker: break
             async for user in reaction.users():
                 if user != player: continue
@@ -197,13 +209,11 @@ async def single_play(player:discord.Member, chan:discord.TextChannel, betpoint=
             makefree(bot)
             return
         await ask_msg.delete()
-        await roll_msg.delete()
-        await board_msg.delete()
 
         yachu.setScore(ind)
         i -= 1
 
-
+    #결과 및 점수정산
     await chan.send(embed=yachu.getScoreBoard())
     await chan.send(f'{yachu.score[14]}점을 얻으셨습니다!')
     if betpoint > 0:

@@ -118,7 +118,7 @@ class Yachu():
         if ind < 6:
             temp = 0
             for i in self.dice:
-                if i == ind+1 : temp += ind
+                if i == ind+1 : temp += i
             self.score[ind] = temp
             self.score[6] = self.subtotal()
             self.score[7] = self.checkBonus()
