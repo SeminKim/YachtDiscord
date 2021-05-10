@@ -201,8 +201,10 @@ async def single_play(player: discord.Member, chan: discord.TextChannel, betpoin
             async for user in reaction.users():
                 if user != player: continue
                 ind = save_index_list.index(reaction.emoji)
-                breaker = True
-                break
+                if yachu.isAvailable(ind):
+                    breaker = True
+                    break
+                else: ind = -1
         if ind == -1:
             await chan.send('잘못된 응답입니다. 야추 게임을 종료합니다.')
             await ng_addpoint(chan, player, -1 * betpoint)

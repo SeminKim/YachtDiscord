@@ -168,8 +168,8 @@ class Yachu():
 
     def isAvailable(self, ind):
         try:
-            if not 0 <= ind - 1 <= 11: return False
-            return self.isAlive[ind - 1]
+            if not 0 <= ind <= 11: return False
+            return self.isAlive[ind]
         except:
             return False
 
