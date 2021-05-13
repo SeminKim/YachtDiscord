@@ -16,6 +16,6 @@ async def ng_addpoint(ctx, user:discord.Member, delta:int):
     return
 
 
-def ng_movepoint(ctx, sender, receiver, point):
-    ng_addpoint(ctx, receiver, point)
-    ng_addpoint(ctx, sender, -1 * point)
+async def ng_movepoint(chan, sender, receiver, point):
+    await ng_addpoint(chan, receiver, point)
+    await ng_addpoint(chan, sender, -1 * point)

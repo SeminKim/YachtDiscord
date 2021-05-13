@@ -43,7 +43,7 @@ class Yachu():
                 self.dice[i] = random.randint(1, 6)
         return str(self.dice)
 
-    def getScoreBoard(self):
+    def getScoreBoard(self, name=None):
         def valueFiller(ind):
             if self.isAlive[ind - 1]:
                 return '0*'
@@ -52,8 +52,10 @@ class Yachu():
                     return str(self.score[ind - 1])
                 else:
                     return str(self.score[ind + 1])
-
-        embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
+        if name == None:
+            embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
+        else:
+            embed = discord.Embed(title=f"{name}님의 점수판  ({self.turn}/12)", color=0xff0000)
         embed.add_field(name="1. Aces", value=valueFiller(1), inline=True)
         embed.add_field(name="2. Deuces", value=valueFiller(2), inline=True)
         embed.add_field(name="3. Threes", value=valueFiller(3), inline=True)
@@ -173,6 +175,14 @@ class Yachu():
         except:
             return False
 
+    def getTurn(self):
+        return self.turn
+
+    def getPhase(self):
+        return self.phase
+
+    def getTotal(self):
+        return self.score[14]
 
 # demo for console
 '''

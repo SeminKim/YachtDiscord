@@ -6,13 +6,10 @@ Indices = ["1.Aces", "2.Deuces", "3.Threes", "4.Fours", "5.Fives", "6.Sixes", "S
            "9.Full House", "10.S.Straight", "11.L.Straight", "12.Yachu", "Total"]
 
 
-class MultiYachu(Yachu):
-    def __init__(self, yachu1: Yachu, yachu2: Yachu, name1='Player1', name2='Player2'):
-        Yachu.__init__(self)
-        self.yachu1 = yachu1
-        self.yachu2 = yachu2
-        self.name1 = name1
-        self.name2 = name2
+class MultiYachu():
+    def __init__(self):
+        self.player_one = Yachu()
+        self.player_two = Yachu()
         return
 
     def getScoreBoard(self):
@@ -43,5 +40,5 @@ class MultiYachu(Yachu):
         return "```\n" + str(x) + "\n```"
 
     def getFinalScore(self):
-        assert self.yachu1.turn == self.yachu2.turn == 12
-        return (self.yachu1.score[14], self.yachu2.score[14])
+        assert self.player_one.getTurn() == self.player_two.getTurn() == 12
+        return (self.player_one.getTotal(), self.player_two.getTotal())
