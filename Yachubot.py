@@ -71,6 +71,9 @@ async def rule(ctx):
                    '```'
                    )
 
+@bot.command(name='점수조회')
+async def point_query(ctx):
+    await ctx.send(ng_getpoint(ctx.author.id, ctx.guild.id))
 
 @bot.command(name='야추베팅')
 async def bet(ctx, point: int):
@@ -80,7 +83,7 @@ async def bet(ctx, point: int):
     if point < 0:
         await ctx.send('되겠냐고ㅋㅋㅋ')
         return
-    limit = ng_getpoint(ctx.author)
+    limit = ng_getpoint(ctx.author.id, ctx.guild.id)
     if point > limit:  # 생각해보니 게임 전 베팅액을 미리 차감해야할 것 같음. 게임하면서 동시에 다른 채널에서 뒤로 빼돌리는 문제가 있음
         drip_msg: discord.Message = await ctx.send(f'{limit}점 가지고 있어서 {point}점 베팅할 수 없어요. ㅋㅋㅋㅋ거지쉑')
         time.sleep(1)
