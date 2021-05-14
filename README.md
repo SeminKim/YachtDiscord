@@ -4,7 +4,8 @@
 Python으로 작성되었습니다.
 
 # 현재 상태
-모두 구현되어 있으나, 날갱봇이 아직 봇이 말하는 명령어를 듣지 못해 점수 업데이트는 작동하지 않습니다.
+모두 구현되어 정상 작동합니다. 만약 날갱봇이 아닌 다른 점수 관리 봇을 사용한다면, ```ext_nalgang.py```
+를 수정하면 됩니다.
 
 # 초기 작업
 Discord Developer Portal (https://discord.com/developers/applications)에서 봇을 생성하여, token값을 data/token.txt에 넣어야 합니다.  
