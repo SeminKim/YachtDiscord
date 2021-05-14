@@ -15,10 +15,21 @@ class Yachu():
         return
 
     def lock(self, num):
+        if not 0<num<6: raise ValueError
         self.locked[num - 1] = True
+
+    def unlock(self, num):
+        if not 0<num<6: raise ValueError
+        self.locked[num - 1] = False
+
+    def lockAll(self):
+        self.locked = [True] * 5
 
     def unlockAll(self):
         self.locked = [False] * 5
+
+    def isAllLocked(self):
+        return self.locked == [True] * 5
 
     def __setDice__(self, s):
         self.dice = s
@@ -30,15 +41,9 @@ class Yachu():
         for i in range(5):
             if not self.locked[i]:
                 self.dice[i] = random.randint(1, 6)
-        return str(self.dice) + '\n{}번 다시 굴릴 수 있습니다'.format(3 - self.phase)
+        return str(self.dice)
 
-    def getScoreBoard(self):
-        return "<현재 턴:{}/12>\n".format(
-            self.turn) + "----점수표----\n1.Aces:{}\n2.Deuces:{}\n3.Threes:{}\n4.Fours:{}\n5.Fives:{}\n6.Sixes:{}\n-------------\nSubtotal:{}\nBonus:{}" \
-                         "\n(63점 이상이면 보너스)\n-------------\n7.Choice:{}\n8.Four Cards:{}\n9.Full House:{}\n10.S.Straight:{}\n11.L.Straight:{}\n12.Yacht:{}\n-------------\nTotal:{}\n".format(
-            *self.score)
-
-    def getScoreBoardDiscord(self):
+    def getScoreBoard(self, name=None):
         def valueFiller(ind):
             if self.isAlive[ind - 1]:
                 return '0*'
@@ -47,8 +52,10 @@ class Yachu():
                     return str(self.score[ind - 1])
                 else:
                     return str(self.score[ind + 1])
-
-        embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
+        if name == None:
+            embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
+        else:
+            embed = discord.Embed(title=f"{name}님의 점수판  ({self.turn}/12)", color=0xff0000)
         embed.add_field(name="1. Aces", value=valueFiller(1), inline=True)
         embed.add_field(name="2. Deuces", value=valueFiller(2), inline=True)
         embed.add_field(name="3. Threes", value=valueFiller(3), inline=True)
@@ -59,12 +66,12 @@ class Yachu():
             name=f'---------------------------------------\nSubtotal: {self.score[6]}              Bonus: {self.score[7]}',
             value="(63점 이상이면 보너스 35점)", inline=False)
         embed.add_field(name="---------------------------------------", value="특수족보", inline=False)
-        embed.add_field(name="7. Choices", value=valueFiller(7), inline=True)
-        embed.add_field(name="8. Four Cards", value=valueFiller(8), inline=True)
-        embed.add_field(name="9. Full House", value=valueFiller(9), inline=True)
-        embed.add_field(name="10. S. Straight", value=valueFiller(10), inline=True)
-        embed.add_field(name="11. L. Straight", value=valueFiller(11), inline=True)
-        embed.add_field(name="12. Yacht", value=valueFiller(12), inline=True)
+        embed.add_field(name="A. Choices", value=valueFiller(7), inline=True)
+        embed.add_field(name="B. Four Cards", value=valueFiller(8), inline=True)
+        embed.add_field(name="C. Full House", value=valueFiller(9), inline=True)
+        embed.add_field(name="D. S. Straight", value=valueFiller(10), inline=True)
+        embed.add_field(name="E. L. Straight", value=valueFiller(11), inline=True)
+        embed.add_field(name="F. Yacht", value=valueFiller(12), inline=True)
         embed.add_field(name="---------------------------------------\nTotal", value=str(self.score[14]), inline=True)
         return embed
 
@@ -110,43 +117,43 @@ class Yachu():
         return False
 
     def setScore(self, ind):
-        if 0 < ind < 7:
+        if ind < 6:
             temp = 0
             for i in self.dice:
-                if i == ind: temp += ind
-            self.score[ind - 1] = temp
+                if i == ind+1 : temp += i
+            self.score[ind] = temp
             self.score[6] = self.subtotal()
             self.score[7] = self.checkBonus()
 
 
-        elif ind == 7:
+        elif ind == 6:
             self.score[8] = self.diceSum()
 
-        elif ind == 8:
+        elif ind == 7:
             if self.isFourCards():
                 self.score[9] = self.diceSum()
             else:
                 self.score[9] = 0
 
-        elif ind == 9:
+        elif ind == 8:
             if self.isFullHouse():
                 self.score[10] = self.diceSum()
             else:
                 self.score[10] = 0
 
-        elif ind == 10:
+        elif ind == 9:
             if self.isSmallStraight():
                 self.score[11] = 15
             else:
                 self.score[11] = 0
 
-        elif ind == 11:
+        elif ind == 10:
             if self.isLargeStraight():
                 self.score[12] = 30
             else:
                 self.score[12] = 0
 
-        elif ind == 12:
+        elif ind == 11:
             if self.dice[0] == self.dice[1] == self.dice[2] == self.dice[3] == self.dice[4]:
                 self.score[13] = 50
             else:
@@ -158,16 +165,24 @@ class Yachu():
         self.score[14] = sum(self.score[6:14])
         self.phase = 0
         self.locked = [False] * 5
-        self.isAlive[ind - 1] = False
+        self.isAlive[ind] = False
         self.turn += 1
 
     def isAvailable(self, ind):
         try:
-            if not 0 <= ind - 1 <= 11: return False
-            return self.isAlive[ind - 1]
+            if not 0 <= ind <= 11: return False
+            return self.isAlive[ind]
         except:
             return False
 
+    def getTurn(self):
+        return self.turn
+
+    def getPhase(self):
+        return self.phase
+
+    def getTotal(self):
+        return self.score[14]
 
 # demo for console
 '''
