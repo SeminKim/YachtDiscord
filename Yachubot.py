@@ -11,7 +11,7 @@ bot = commands.Bot(command_prefix='!', activity=game)
 bot.player_one = None
 bot.player_two = None
 bot.channel_now = None
-TIME_OUT = 60.0
+TIME_OUT = 90.0
 
 
 def makefree(bot):
@@ -23,8 +23,10 @@ def makefree(bot):
 
 @bot.check  # only available in whitelisted channel
 async def channel_whitelist(ctx):
-    with open('data/log.txt', 'a') as f:
-        f.write(f'{ctx.message.content} called by {ctx.author.display_name} in {ctx.channel.name} at {time.ctime()}\n')
+    # Logging Disabled
+    ''' with open('data/log.txt', 'a') as f:
+            f.write(f'{ctx.message.content} called by {ctx.author.display_name} in {ctx.channel.name} at {time.ctime()}\n') '''
+
     return ctx.channel.id in whitelist
 
 
@@ -33,8 +35,8 @@ async def on_ready():
     makefree(bot)
     with open('data/log.txt', 'a') as f:
         f.write(f'bot started at {time.ctime()}\n')
-    for channelid in whitelist:
-        await bot.get_channel(channelid).send('야추봇이 시작되었습니다!')
+    for channel_id in whitelist:
+        await bot.get_channel(channel_id).send('야추봇이 시작되었습니다! **주의: 봇이 5초 이상 멈춰있으면 아무 입력이나 넣어주세요')
         print("READY")
 
 
@@ -56,21 +58,23 @@ async def print_help(ctx):
                    '!야추도움 - 이 도움말을 봅니다.\n'
                    '!야추연습 - 야추봇과 야추 주사위 연습게임을 시작합니다.\n'
                    '!야추베팅 (걸 점수) - 날갱점수를 걸고 총점 200점에 도전합니다. 승리하면 두 배로 돌려받습니다.\n'
-                   '!야추대결 (@대결상대) (걸 점수) - 날갱점수를 걸고 상대와 대결합니다.'
+                   '!야추대결 (@대결상대) (걸 점수) - 날갱점수를 걸고 상대와 대결합니다.\n'
+                   '!야추규칙 - 안읽고 하면 책임안짐ㅎㅎ...ㅋㅋ...ㅈㅅ!!'
                    '```'
                    )
 
 
-'''
 @bot.command(name='야추규칙')
 async def rule(ctx):
     await ctx.send('```\n'
-                   '1. 봇에 응답할때에는 너무 빨리 입력하지 않도록 해주세요.\n'
-                   '2. 주사위를 처음 굴린 후, 다시 굴리고 싶다면 먼저 0을 입력하고, 고정할 주사위의 "눈"이 아닌 "번호"를 입력해주세요.\n'
-                   '3. 잘못된 입력이 여러 번 들어오면 자동으로 게임이 종료됩니다. 게임 중 채팅을 치고 싶다면 야-추가 아닌 다른 채널을 이용하여 예방할 수 있습니다.\n'
+                   '1. 입출력 과정에 멈춤 현상이 일어날 경우, 아무 메시지나 반응 이모지를 전송하면 해결할 수 있습니다.\n'
+                   '2. 잘못된 입력이 들어오면 자동으로 게임이 종료될 수 있으며, 포인트 역시 사라질 수 있습니다.\n'
+                   '3. 합당한 귀책사유가 있는 경우를 제외하고, 버그로 인한 포인트 손실은 책임지지 않습니다. \n'
+                   '3.1 특히, 이용자 단순 실수, 입출력 과정의 프리징, 서버 다운 등은 해결할 수 없으므로 책임지지 않습니다.\n'
                    '4. 버그제보 및 코드 리뷰, 기능 추가는 언제든 환영입니다! => https://github.com/SeminKim/YachtDiscord\n'
                    '```'
-                   )'''
+                   )
+    return
 
 '''@bot.command(name='점수조회')
 async def point_query(ctx):
@@ -141,7 +145,6 @@ async def play_one_turn(yachu: Yachu,
 
     def check(reaction, user):
         return user == player and str(reaction.emoji) == '🆗'
-
 
     while yachu.phase < 3:
         # 먼저 주사위를 굴리고(phase 1증가), 무엇을 다시 굴릴 지 질문 메시지 전송. 메시지 화면은 board, dice, phase, ask 순.
@@ -224,12 +227,12 @@ async def single_play(player: discord.Member, chan: discord.TextChannel, betpoin
     i = 12
     while i > 0:
         if not await play_one_turn(yachu=yachu,
-                            player=player,
-                            chan=chan,
-                            board_msg=board_msg,
-                            roll_msg=roll_msg,
-                            phase_msg=phase_msg,
-                            betpoint=betpoint):
+                                   player=player,
+                                   chan=chan,
+                                   board_msg=board_msg,
+                                   roll_msg=roll_msg,
+                                   phase_msg=phase_msg,
+                                   betpoint=betpoint):
             await ng_addpoint(chan, player, -1 * betpoint)
             makefree(bot)
             return
@@ -264,12 +267,12 @@ async def vs_playing(player_one: discord.Member,
     while i > 0:
         player_indicator_msg = await chan.send(f'{player_one.mention}님의 차례입니다.')
         if not await play_one_turn(yachu=multiyachu.player_one,
-                            player=player_one,
-                            chan=chan,
-                            board_msg=board_msg_one,
-                            roll_msg=roll_msg,
-                            phase_msg=phase_msg,
-                            betpoint=betpoint):
+                                   player=player_one,
+                                   chan=chan,
+                                   board_msg=board_msg_one,
+                                   roll_msg=roll_msg,
+                                   phase_msg=phase_msg,
+                                   betpoint=betpoint):
             await ng_movepoint(chan, sender=player_one, receiver=player_two, point=betpoint)
             makefree(bot)
             return
@@ -278,12 +281,12 @@ async def vs_playing(player_one: discord.Member,
         player_indicator_msg = await chan.send(f'{player_two.mention}님의 차례입니다.')
 
         if not await play_one_turn(yachu=multiyachu.player_two,
-                            player=player_two,
-                            chan=chan,
-                            board_msg=board_msg_two,
-                            roll_msg=roll_msg,
-                            phase_msg=phase_msg,
-                            betpoint=betpoint):
+                                   player=player_two,
+                                   chan=chan,
+                                   board_msg=board_msg_two,
+                                   roll_msg=roll_msg,
+                                   phase_msg=phase_msg,
+                                   betpoint=betpoint):
             await ng_movepoint(chan, sender=player_two, receiver=player_one, point=betpoint)
             makefree(bot)
             return

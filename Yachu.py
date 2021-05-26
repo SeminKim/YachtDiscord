@@ -5,6 +5,7 @@ import discord
 class Yachu():
 
     def __init__(self):
+        self.save_log = True  # Change to False if you don't want logging
         self.score = [0] * 15
         self.dice = [0] * 5
         self.locked = [False] * 5
@@ -12,14 +13,23 @@ class Yachu():
         self.isAlive = [True] * 12
         self.turn = 0
         print("새 야추게임 생성")
+        if self.save_log:
+            with open(f'data/log.txt', 'a') as f:
+                f.write(f'-------------------------NEW YACHU-------------------------\n')
         return
 
+    def make_log(self):
+        if self.save_log:
+            with open(f'data/log.txt', 'a') as f:
+                f.write(f'TURN:{self.turn} PHASE:{self.phase} DICE:{self.dice}\n')
+            return
+
     def lock(self, num):
-        if not 0<num<6: raise ValueError
+        if not 0 < num < 6: raise ValueError
         self.locked[num - 1] = True
 
     def unlock(self, num):
-        if not 0<num<6: raise ValueError
+        if not 0 < num < 6: raise ValueError
         self.locked[num - 1] = False
 
     def lockAll(self):
@@ -36,11 +46,11 @@ class Yachu():
 
     def rollDice(self):
         assert self.phase < 3
-
         self.phase += 1
         for i in range(5):
             if not self.locked[i]:
                 self.dice[i] = random.randint(1, 6)
+        self.make_log()
         return str(self.dice)
 
     def getScoreBoard(self, name=None):
@@ -52,7 +62,8 @@ class Yachu():
                     return str(self.score[ind - 1])
                 else:
                     return str(self.score[ind + 1])
-        if name == None:
+
+        if name is None:
             embed = discord.Embed(title=f"점수판    ({self.turn}/12)", color=0xff0000)
         else:
             embed = discord.Embed(title=f"{name}님의 점수판  ({self.turn}/12)", color=0xff0000)
@@ -120,7 +131,7 @@ class Yachu():
         if ind < 6:
             temp = 0
             for i in self.dice:
-                if i == ind+1 : temp += i
+                if i == ind + 1: temp += i
             self.score[ind] = temp
             self.score[6] = self.subtotal()
             self.score[7] = self.checkBonus()
@@ -183,6 +194,7 @@ class Yachu():
 
     def getTotal(self):
         return self.score[14]
+
 
 # demo for console
 '''
