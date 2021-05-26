@@ -245,6 +245,7 @@ async def single_play(player: discord.Member, chan: discord.TextChannel, betpoin
         else:
             await ng_addpoint(chan, player, betpoint)
             await chan.send(f'200점 이상을 획득하셨네요. {betpoint}점을 획득하였습니다!')
+    makefree(bot)
     return
 
 
@@ -303,6 +304,7 @@ async def vs_playing(player_one: discord.Member,
     await chan.send(
         f'게임 결과에 따라, 각각 {result[0]}점, {result[1]}점이 되셨습니다!'
     )
+    makefree(bot)
 
 
 # LEGACY CODE
