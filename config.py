@@ -21,5 +21,8 @@ ALERT_AT_START = False
 ### Checks ###
 # If API is not available, USE_NG_API will be always set to False.
 if USE_NG_API:
-    if requests.get(f'{NG_SERVER_URL}?id=0&guild=0').status_code != 200:
+    try:
+        if requests.get(f'{NG_SERVER_URL}?id=0&guild=0').status_code == 200:
+            USE_NG_API = True
+    except:
         USE_NG_API = False
