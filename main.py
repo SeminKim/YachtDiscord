@@ -1,4 +1,4 @@
 from Yachubot import bot
+from config import BOT_TOKEN
 
-token = open('data/token.txt', 'r').readline()
-bot.run(token)
+bot.run(BOT_TOKEN)

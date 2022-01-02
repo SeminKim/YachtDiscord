@@ -1,11 +1,11 @@
 import random
 import discord
-
+from logger import put_log
 
 class Yachu():
 
     def __init__(self):
-        self.save_log = True  # Change to False if you don't want logging
+        # self.save_log = True  ## log enable option is now in config.py
         self.score = [0] * 15
         self.dice = [0] * 5
         self.locked = [False] * 5
@@ -13,16 +13,11 @@ class Yachu():
         self.isAlive = [True] * 12
         self.turn = 0
         print("새 야추게임 생성")
-        if self.save_log:
-            with open(f'data/log.txt', 'a') as f:
-                f.write(f'-------------------------NEW YACHU-------------------------\n')
+        put_log('-------------------------NEW YACHU-------------------------\n')
         return
 
     def make_log(self):
-        if self.save_log:
-            with open(f'data/log.txt', 'a') as f:
-                f.write(f'TURN:{self.turn} PHASE:{self.phase} DICE:{self.dice}\n')
-            return
+        put_log(f'TURN:{self.turn} PHASE:{self.phase} DICE:{self.dice}\n')
 
     def lock(self, num):
         if not 0 < num < 6: raise ValueError

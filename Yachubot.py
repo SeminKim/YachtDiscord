@@ -4,8 +4,8 @@ from discord.ext import commands
 from asyncio import TimeoutError
 from ext_nalgang import *
 from config import *
+from logger import put_log
 
-whitelist = CHANNEL_WHITELIST
 game = discord.Game("도움말은 !야추도움")
 bot = commands.Bot(command_prefix='!', activity=game)
 bot.player_one = None
@@ -14,35 +14,36 @@ bot.channel_now = None
 TIME_OUT = 90.0
 
 
-def makefree(bot):
+def make_free(bot):
     bot.player_one = None
     bot.player_two = None
     bot.channel_now = None
     return
 
 
+def is_free(bot):
+    return (bot.player_one is None) and (bot.player_two is None)
+
+
 @bot.check  # only available in whitelisted channel
 async def channel_whitelist(ctx):
-    # Logging Disabled
-    ''' with open('data/log.txt', 'a') as f:
-            f.write(f'{ctx.message.content} called by {ctx.author.display_name} in {ctx.channel.name} at {time.ctime()}\n') '''
-
-    return ctx.channel.id in whitelist
+    put_log(f'{ctx.message.content} called by {ctx.author.display_name} in {ctx.channel.name} at {time.ctime()}\n')
+    return ctx.channel.id in CHANNEL_WHITELIST
 
 
 @bot.event
 async def on_ready():
-    makefree(bot)
-    with open('data/log.txt', 'a') as f:
-        f.write(f'bot started at {time.ctime()}\n')
-    for channel_id in whitelist:
-        await bot.get_channel(channel_id).send('야추봇이 시작되었습니다! **주의: 봇이 5초 이상 멈춰있으면 아무 입력이나 넣어주세요')
-        print("READY")
+    make_free(bot)
+    put_log(f'bot started at {time.ctime()}\n')
+    if ALERT_AT_START:
+        for channel_id in CHANNEL_WHITELIST:
+            await bot.get_channel(channel_id).send('야추봇이 시작되었습니다! **주의: 봇이 5초 이상 멈춰있으면 아무 입력이나 넣어주세요')
+    print("READY")
 
 
 @bot.command(name='야추연습')
 async def start(ctx: discord.ext.commands.Context):
-    if bot.player_one is not None:
+    if not is_free(bot):
         await ctx.send("다른 분과 이미 야추중이에요. 기다려주세요")
         return
     else:
@@ -76,6 +77,7 @@ async def rule(ctx):
                    )
     return
 
+
 '''@bot.command(name='점수조회')
 async def point_query(ctx):
     await ctx.send(ng_getpoint(ctx.author.id, ctx.guild.id))'''
@@ -83,11 +85,14 @@ async def point_query(ctx):
 
 @bot.command(name='야추베팅')
 async def bet(ctx, point: int):
-    if bot.player_one != None:
+    if not is_free(bot):
         await ctx.send("다른 분과 이미 야추중이에요. 기다려주세요")
         return
     if point < 0:
         await ctx.send('되겠냐고ㅋㅋㅋ')
+        return
+    if not USE_NG_API:
+        await ctx.send('포인트 기능이 비활성화되어 사용할 수 없습니다.')
         return
     limit = ng_getpoint(ctx.author.id, ctx.guild.id)
     if point > limit:  # 생각해보니 게임 전 베팅액을 미리 차감해야할 것 같음. 게임하면서 동시에 다른 채널에서 뒤로 빼돌리는 문제가 있음
@@ -104,7 +109,10 @@ async def bet(ctx, point: int):
 
 @bot.command(name='야추대결')
 async def vs(ctx, user: discord.member.Member, point: int):
-    if bot.player_one == None and bot.player_two == None:
+    if is_free(bot):
+        if not USE_NG_API:
+            await ctx.send('포인트 기능이 비활성화되어 사용할 수 없습니다.')
+            return
         a, b = ng_getpoint(ctx.author.id, ctx.guild.id), ng_getpoint(user.id, ctx.guild.id)
         if a < point or b < point or point < 0:
             await ctx.send(f'거 상도덕은 지키면서 삽시다. 어떻게 {point}점을 걸겠다고 그러십니까?\n(현재 각각 {a}점, {b}점 보유)')
@@ -123,7 +131,7 @@ async def vs(ctx, user: discord.member.Member, point: int):
                 await bot.wait_for('message', check=check, timeout=TIME_OUT)
             except TimeoutError:
                 await ctx.send('도전 거절!')
-                makefree(bot)
+                make_free(bot)
                 return
             await ctx.send(f'{ctx.author.display_name}님과 {user.display_name}님의 대결이 시작됩니다!')
             await vs_playing(ctx.author, user, ctx.channel, point)
@@ -234,7 +242,7 @@ async def single_play(player: discord.Member, chan: discord.TextChannel, betpoin
                                    phase_msg=phase_msg,
                                    betpoint=betpoint):
             await ng_addpoint(chan, player, -1 * betpoint)
-            makefree(bot)
+            make_free(bot)
             return
         i -= 1
 
@@ -248,7 +256,7 @@ async def single_play(player: discord.Member, chan: discord.TextChannel, betpoin
         else:
             await ng_addpoint(chan, player, betpoint)
             await chan.send(f'200점 이상을 획득하셨네요. {betpoint}점을 획득하였습니다!')
-    makefree(bot)
+    make_free(bot)
     return
 
 
@@ -274,7 +282,7 @@ async def vs_playing(player_one: discord.Member,
                                    phase_msg=phase_msg,
                                    betpoint=betpoint):
             await ng_movepoint(chan, sender=player_one, receiver=player_two, point=betpoint)
-            makefree(bot)
+            make_free(bot)
             return
 
         await player_indicator_msg.delete()
@@ -288,7 +296,7 @@ async def vs_playing(player_one: discord.Member,
                                    phase_msg=phase_msg,
                                    betpoint=betpoint):
             await ng_movepoint(chan, sender=player_two, receiver=player_one, point=betpoint)
-            makefree(bot)
+            make_free(bot)
             return
 
         i -= 1
@@ -307,7 +315,7 @@ async def vs_playing(player_one: discord.Member,
     await chan.send(
         f'게임 결과에 따라, 각각 {result[0]}점, {result[1]}점이 되셨습니다!'
     )
-    makefree(bot)
+    make_free(bot)
 
 
 # LEGACY CODE
